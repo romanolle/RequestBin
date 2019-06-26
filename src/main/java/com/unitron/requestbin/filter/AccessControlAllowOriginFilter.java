@@ -19,21 +19,6 @@ import org.springframework.web.filter.GenericFilterBean;
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class AccessControlAllowOriginFilter extends GenericFilterBean {
-
-	private static final String[] SERVLET_PATHES_FOR_CROSSDOMAIN_PERMISSION = {
-		"/services/location/authenticate"
-	}; 
-	private static final String ALLOW_ORIGIN_ALL = "*";
-	
-	
-	private static final String DEBUG_PROPERTY_KEY = "debug";
-	private static final String DEBUG_ALLOW_ORIGIN_URL_KEY = "access.control.allow.origin";
-	
-	private static final String DEBUG_PROPERTY_DEFAULT_VALUE = "false";
-	private static final String DEBUG_ALLOW_ORIGIN_URL_DEFAULT_VALUE = null; 	// null - automatically gets origin URL from request; or we can restrict (e.g. "http://localhost:9500")
-	
-	
-	private static final String REQUEST_HEADER_ORIGIN = "Origin";
 	
 	@Override
 	protected void initFilterBean() throws ServletException {
@@ -42,7 +27,6 @@ public class AccessControlAllowOriginFilter extends GenericFilterBean {
 	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
-		//allowOrigin(resp, "/pokus/pokus", true);
 		allowOrigin(resp, "*", false);
 		chain.doFilter(req, resp);
 	}
