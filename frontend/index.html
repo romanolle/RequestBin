@@ -1,0 +1,70 @@
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<title>Request bin</title>
+		<meta name="author" content="Roman">
+
+		<style>
+			body {
+				color:black;
+				background-color:#f0f0f0;
+			}
+
+			#requests div {
+				background-color:#FFC0CB;
+				border:1px solid black;
+				padding:12px;
+				margin:4px;
+			}
+
+			#requests div p {
+				font-weight:bold;
+			}
+		</style>
+
+		<script src="jquery-3.4.1.min.js" ></script>
+		<script type="text/javascript">
+			var key=randomString(5);
+			function randomString(stringSize) {
+				var s = '';
+				var randomChar = function () {
+					var n = Math.floor(Math.random() * 62);
+					if (n < 10) return n; //0-9
+					if (n < 36) return String.fromCharCode(n + 55); //A-Z
+					return String.fromCharCode(n + 61); //a-z
+				};
+				while (s.length < stringSize)
+					s += randomChar();
+				return s;
+			}
+
+
+			(function poll() {
+					$.ajax({
+						type: "POST",
+						beforeSend: function(request) {
+							request.setRequestHeader("Tab-Key", key);
+						},
+						url: "http://localhost:8095/request-bin/event", success: function(data) {
+
+						var fLen = data.length;
+
+						for (i = 0; i < fLen; i++) {
+							$('#requests').prepend('<div><p>Issued: '+data[i].timestamp+'</p>'+data[i].object.replace(/\n/g, "<br />")+'</div>');
+						}
+
+						}, dataType: "json", complete: poll });
+			})();
+
+		</script>
+
+	</head>
+
+	<body>
+	<h1>Requests</h1>
+	<div id="requests"></div>
+	</body>
+</html>
