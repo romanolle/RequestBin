@@ -48,7 +48,7 @@
 						beforeSend: function(request) {
 							request.setRequestHeader("Tab-Key", key);
 						},
-						url: "http://localhost:8095/request-bin/event", success: function(data) {
+						url: "/request-bin/services/event", success: function(data) {
 
 						var fLen = data.length;
 

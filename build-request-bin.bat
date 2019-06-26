@@ -1,29 +1,23 @@
 @echo off
-set ucloud=ucloud
-set name=%ucloud%.zip
+set requestbin=request-bin
+set name=%requestbin%.zip
 
-if exist %ucloud% rmdir %ucloud% /S /Q
-mkdir %ucloud%
+if exist %requestbin% rmdir %requestbin% /S /Q
+mkdir %requestbin%
 if exist %name% del %name%
-cd ..\backend
+
 call mvn clean install -DskipTests
-copy target\ucloud-1.4.0.DEV.jar ..\build\ucloud
+copy target\%requestbin%-1.0.0.DEV.jar %requestbin%
 
-cd ..\frontend
-call grunt build
-xcopy build\ucloud ..\build\ucloud\ucloud /E /Y /I
+xcopy frontend %requestbin%\%requestbin% /E /Y /I
 
-cd ..\build
-copy daemon.sh %ucloud%
-copy daemon-test.sh %ucloud%
-copy daemon-prelife.sh %ucloud%
-copy start-app.sh %ucloud%
-copy start-app-test.sh %ucloud%
-copy start-app-prelife.sh %ucloud%
-copy functions %ucloud%
-::call jar -cf %ucloud%.zip %ucloud%
-::call 7z.exe -t7z -bd a %ucloud%.zip %ucloud%
-call 7z a -tzip %name% %ucloud%
+cd installation
+copy daemon.sh ..\%requestbin%
+copy start-app.sh ..\%requestbin%
+cd ..
+::call jar -cf %requestbin%.zip %requestbin%
+::call 7z.exe -t7z -bd a %requestbin%.zip %requestbin%
+call 7z a -tzip %name% %requestbin%
 
-rmdir %ucloud% /S /Q
+rmdir %requestbin% /S /Q
 pause

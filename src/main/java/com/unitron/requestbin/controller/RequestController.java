@@ -37,12 +37,12 @@ public class RequestController {
 	private static final Logger Logger = LoggerFactory.getLogger(RequestController.class);
 	
 	
-	@PostMapping(value="/event")
+	@PostMapping(value="/services/event")
 	public @ResponseBody Collection<Event> getEvent(@RequestHeader("Tab-Key") String tabKey) {
 		return eventService.getEvents(tabKey);
 	}
 	
-	@PostMapping(value="/handle")
+	@PostMapping(value="/services/handle")
 	@ResponseStatus(code=HttpStatus.OK)
 	public void handleRequest(@RequestBody String obj) {
 		String objAsString = obj.toString();
