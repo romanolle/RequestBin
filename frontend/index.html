@@ -27,7 +27,13 @@
 
 		<script src="jquery-3.4.1.min.js" ></script>
 		<script type="text/javascript">
+			
+			const url = new URL(window.location.href);
+			const searchParams = new URLSearchParams(url.search);
+			const path = searchParams.get('path')  || "";
+
 			var key=randomString(5);
+
 			function randomString(stringSize) {
 				var s = '';
 				var randomChar = function () {
@@ -43,12 +49,13 @@
 
 
 			(function poll() {
+					//$('#requests').prepend('<div><p>' + url + '->' + searchParams+ '->' + path + '</p></div>');
 					$.ajax({
 						type: "POST",
 						beforeSend: function(request) {
 							request.setRequestHeader("Tab-Key", key);
 						},
-						url: "/request-bin/services/event", success: function(data) {
+						url: "/request-bin/services/event/"+path, success: function(data) {
 
 						var fLen = data.length;
 

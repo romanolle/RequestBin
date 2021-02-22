@@ -44,66 +44,71 @@ public class DefaultEventService implements EventService, EventListener, TabKeyL
 	private ExecutorService EXECUTOR_SERVICE;			// defines 1000ms bulk events collection timeout
 
 	private final Object mutex=new Object();
-	
-	private final Map<String, TabData> tabs = Maps.newConcurrentMap();
-				
-	public BlockingQueue<Event> getEventQueue(String tabKey) {
-		synchronized(mutex) {
-			createTabKeyIfNotExists(tabKey);
-			tabs.get(tabKey).updateLastAccess();
-			return tabs.get(tabKey).getQueue();
-		}
-	}
 
-	private void createTabKeyIfNotExists(String tabKey) {
-		if(tabKey != null && !tabs.containsKey(tabKey)) {
-			tabs.put(tabKey, new TabData(new LinkedBlockingQueue<Event>(EVENT_QUEUE_CAPACITY)));
-		}
-	}
+	private final Map<String, Events> events=Maps.newHashMap();
+				
+//	public BlockingQueue<Event> getEventQueue(String tabKey, String key) {
+//		synchronized(mutex) {
+//			createTabKeyIfNotExists(tabKey);
+//			tabs.get(tabKey).updateLastAccess();
+//			return tabs.get(tabKey).getQueue();
+//		}
+//	}
+
+//	private void createTabKeyIfNotExists(String tabKey) {
+//		if(tabKey != null && !tabs.containsKey(tabKey)) {
+//			tabs.put(tabKey, new TabData(new LinkedBlockingQueue<Event>(EVENT_QUEUE_CAPACITY)));
+//		}
+//	}
 
 	public void checkAliveTabs() {
 		synchronized(mutex) {
-			for(Entry<String, TabData> entry : tabs.entrySet()) {
-				TabData data = entry.getValue();
-				if(data.isTabExpired()) {
-					tabs.remove(entry.getKey());
+			for(Events events : events.values()) {
+				Map<String, com.unitron.requestbin.service.impl.DefaultEventService.Events.TabData> tabs = events.tabs;
+				for(Entry<String, com.unitron.requestbin.service.impl.DefaultEventService.Events.TabData> entry : tabs.entrySet()) {
+					com.unitron.requestbin.service.impl.DefaultEventService.Events.TabData data = entry.getValue();
+					if(data.isTabExpired()) {
+						tabs.remove(entry.getKey());
+					}
 				}
 			}
 		}
 	}
 
-	public void offerToAllTabs(Event event) throws InterruptedException {
+	public void offerToAllTabs(String key, Event event) throws InterruptedException {
 		synchronized(mutex) {
-			for(Entry<String, TabData> tab : tabs.entrySet()) {
-				BlockingQueue<Event> events = tab.getValue().getQueue();
-				events.put(event);
+			if(events.containsKey(key)) {
+				for(Entry<String, com.unitron.requestbin.service.impl.DefaultEventService.Events.TabData> tab : events.get(key).tabs.entrySet()) {
+					BlockingQueue<Event> events = tab.getValue().getQueue();
+					events.put(event);
+				}
 			}
 		}
 	}
 
-	private static class TabData {
-		
-		private final LinkedBlockingQueue<Event> queue;
-		private Date lastAccess;
-		
-		public TabData(LinkedBlockingQueue<Event> queue) {
-			super();
-			lastAccess = new Date();
-			this.queue = queue;
-		}
-
-		public boolean isTabExpired() {
-			return DateUtils.plusMillies(lastAccess, TAB_EXPIRE_TIMEOUT).before(new Date());
-		}
-
-		public void updateLastAccess() {
-			this.lastAccess = new Date();
-		}
-
-		public LinkedBlockingQueue<Event> getQueue() {
-			return queue;
-		}
-	}
+//	private static class TabData {
+//		
+//		private final LinkedBlockingQueue<Event> queue;
+//		private Date lastAccess;
+//		
+//		public TabData(LinkedBlockingQueue<Event> queue) {
+//			super();
+//			lastAccess = new Date();
+//			this.queue = queue;
+//		}
+//
+//		public boolean isTabExpired() {
+//			return DateUtils.plusMillies(lastAccess, TAB_EXPIRE_TIMEOUT).before(new Date());
+//		}
+//
+//		public void updateLastAccess() {
+//			this.lastAccess = new Date();
+//		}
+//
+//		public LinkedBlockingQueue<Event> getQueue() {
+//			return queue;
+//		}
+//	}
 
 	@PostConstruct
 	public void init(){
@@ -141,16 +146,25 @@ public class DefaultEventService implements EventService, EventListener, TabKeyL
 	}
 
 	@Override
-	public void onRequest(String tabKey) {
-		createTabKeyIfNotExists(tabKey);
+	public void onRequest(String tabKey, String key) {
+		createEventKeyIfNotExists(key);
+		events.get(key).createTabKeyIfNotExists(tabKey);
+	}
+
+	private void createEventKeyIfNotExists(String key) {
+		if(!events.containsKey(key)) {
+			events.put(key, new Events());
+		}
 	}
 
 	@Override
-	public void onEvent(Event event) {
-		logger.info("Received event {} will go to tabs {}", event, tabs.keySet().toString());
+	public void onEvent(Event event, String key) {
+		if(events.containsKey(key)) {
+			logger.info("Received event {} will go to tabs {} with key " + key, event, events.get(key).tabs.keySet().toString());
+		}
 		synchronized (mutex) {
 			try {
-				offerToAllTabs(event);
+				offerToAllTabs(key, event);
 			} catch(InterruptedException e) {
 				logger.error(e.toString());
 			}
@@ -158,13 +172,16 @@ public class DefaultEventService implements EventService, EventListener, TabKeyL
 	}
 
 	@Override
-	public Collection<Event> getEvents(String tabKey) {
-		if(!tabs.containsKey(tabKey))
+	public Collection<Event> getEvents(String key, String tabKey) {
+		Events keyEvents = events.get(key);
+		if(keyEvents == null) {
 			return null;
-		BlockingQueue<Event> eventQueue=getEventQueue(tabKey);
+		}
+		BlockingQueue<Event> eventQueue=keyEvents.getEventQueue(tabKey);
 		List<Event> events=Lists.newArrayList();
-		if(eventQueue==null)
+		if(eventQueue == null) {
 			return events;
+		}
 		
 		Event event=null;
 		try {
@@ -176,7 +193,7 @@ public class DefaultEventService implements EventService, EventListener, TabKeyL
 		//setting timeout before sending events
 		Date stopTime=DateUtils.plusMillies(new Date(), NEXT_EVENTS_TIMEOUT);
 				
-		while(event!=null){
+		while(event != null){
 			events.add(event);
 			
 			try {
@@ -195,4 +212,73 @@ public class DefaultEventService implements EventService, EventListener, TabKeyL
 		return events;
 	}
 
+	
+
+	private static class Events {
+		
+		private final Map<String, TabData> tabs = Maps.newConcurrentMap();
+		
+		private static final Object mutex = new Object();
+				
+		public BlockingQueue<Event> getEventQueue(String tabKey) {
+			synchronized(mutex) {
+				createTabKeyIfNotExists(tabKey);
+				tabs.get(tabKey).updateLastAccess();
+				return tabs.get(tabKey).getQueue();
+			}
+		}
+
+		private void createTabKeyIfNotExists(String tabKey) {
+			if(tabKey != null && !tabs.containsKey(tabKey)) {
+				tabs.put(tabKey, new TabData(new LinkedBlockingQueue<Event>(EVENT_QUEUE_CAPACITY)));
+			}
+		}
+
+		public void checkAliveTabs() {
+			synchronized(mutex) {
+				for(Entry<String, TabData> entry : tabs.entrySet()) {
+					TabData data = entry.getValue();
+					if(data.isTabExpired()) {
+						tabs.remove(entry.getKey());
+					}
+				}
+			}
+		}
+
+		public void offerToAllTabs(Event event) throws InterruptedException {
+			synchronized(mutex) {
+				for(TabData data : tabs.values()) {
+					BlockingQueue<Event> events = data.getQueue();
+					events.put(event);
+				}
+			}
+		}
+
+		private static class TabData {
+			
+			private final LinkedBlockingQueue<Event> queue;
+			private Date lastAccess;
+			
+			public TabData(LinkedBlockingQueue<Event> queue) {
+				super();
+				lastAccess = new Date();
+				this.queue = queue;
+			}
+
+			public boolean isTabExpired() {
+				return DateUtils.plusMillies(lastAccess, TAB_EXPIRE_TIMEOUT).before(new Date());
+			}
+
+			public void updateLastAccess() {
+				this.lastAccess = new Date();
+			}
+
+			public LinkedBlockingQueue<Event> getQueue() {
+				return queue;
+			}
+			
+			
+			
+		}
+	}
 }
