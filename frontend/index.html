@@ -32,6 +32,8 @@
 			const searchParams = new URLSearchParams(url.search);
 			const path = searchParams.get('path')  || "";
 
+			document.title = path;
+			
 			var key=randomString(5);
 
 			function randomString(stringSize) {

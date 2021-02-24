@@ -1,8 +1,6 @@
 package com.unitron.requestbin.filter;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -14,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -58,29 +55,29 @@ public class CustomEventRegisterFilter  extends OncePerRequestFilter {
 				.replaceFirst(path, "")
 				.replaceFirst("/", "");
 	}
-	
-	private String findKey(String url) {
-		String key = "";
-		if(url.startsWith(RequestController.EVENT_PATH)) {
-			key = url.replaceFirst(RequestController.EVENT_PATH, "");
-			if(key.length() != 0) {
-				if(key.charAt(0) != '/') {
-					return "";
-				} else {
-					key = key + "/";
-					if(key.startsWith("//")) {
-						return "";
-					}
-					Pattern pattern = Pattern.compile("(/\\w+/)");
-					Matcher matcher = pattern.matcher(key);
-					if (matcher.find()) {
-					    return matcher.group(1).replaceAll("/", "");
-					}
-				}
-			}
-		}
-		return "";
-	}
+//	
+//	private String findKey(String url) {
+//		String key = "";
+//		if(url.startsWith(RequestController.EVENT_PATH)) {
+//			key = url.replaceFirst(RequestController.EVENT_PATH, "");
+//			if(key.length() != 0) {
+//				if(key.charAt(0) != '/') {
+//					return "";
+//				} else {
+//					key = key + "/";
+//					if(key.startsWith("//")) {
+//						return "";
+//					}
+//					Pattern pattern = Pattern.compile("(/\\w+/)");
+//					Matcher matcher = pattern.matcher(key);
+//					if (matcher.find()) {
+//					    return matcher.group(1).replaceAll("/", "");
+//					}
+//				}
+//			}
+//		}
+//		return "";
+//	}
 
 	@Override
 	protected void initFilterBean() throws ServletException {

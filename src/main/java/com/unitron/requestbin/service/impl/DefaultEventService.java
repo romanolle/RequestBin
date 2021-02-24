@@ -234,25 +234,25 @@ public class DefaultEventService implements EventService, EventListener, TabKeyL
 			}
 		}
 
-		public void checkAliveTabs() {
-			synchronized(mutex) {
-				for(Entry<String, TabData> entry : tabs.entrySet()) {
-					TabData data = entry.getValue();
-					if(data.isTabExpired()) {
-						tabs.remove(entry.getKey());
-					}
-				}
-			}
-		}
-
-		public void offerToAllTabs(Event event) throws InterruptedException {
-			synchronized(mutex) {
-				for(TabData data : tabs.values()) {
-					BlockingQueue<Event> events = data.getQueue();
-					events.put(event);
-				}
-			}
-		}
+//		public void checkAliveTabs() {
+//			synchronized(mutex) {
+//				for(Entry<String, TabData> entry : tabs.entrySet()) {
+//					TabData data = entry.getValue();
+//					if(data.isTabExpired()) {
+//						tabs.remove(entry.getKey());
+//					}
+//				}
+//			}
+//		}
+//
+//		public void offerToAllTabs(Event event) throws InterruptedException {
+//			synchronized(mutex) {
+//				for(TabData data : tabs.values()) {
+//					BlockingQueue<Event> events = data.getQueue();
+//					events.put(event);
+//				}
+//			}
+//		}
 
 		private static class TabData {
 			
