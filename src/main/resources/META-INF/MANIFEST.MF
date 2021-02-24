@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Bundle-Name: request-bin
-Bundle-Version: 1.0.0.BETA-1
-Bundle-Vendor: UNITRON
-Bundle-ReleaseDate: 2021-02-23
-

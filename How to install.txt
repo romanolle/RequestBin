@@ -1,0 +1,21 @@
+Needs to be changed version in:
+	backend\pom.xml
+	backend\src\main\resoruces\META-INF\MANIFEST.MF
+	build\build-request-bin.bat
+	build\installRequestBin.sh
+	build\app\start-app.sh
+	
+	
+Before installation:
+	needs to be setup in entry point (Apache, Nginx, ...) JK mode:
+		JK Mount on /request-bin/services/* requestBinWorker (create JK worker to port 8013)
+		
+	
+Steps to install:
+	1) change versions (if needed)
+	2) go to build and run build-request-bin.bat (in Windows system)
+	3) copy installRequestBin.sh and request-bin.zip to Linux server
+	4) go to this directory
+	5) make installRequestBin.sh executable (chmod +x installRequestBin.sh)
+	6) execute ./installRequestBin.sh
+	7) after all request bin should running on /request-bin
