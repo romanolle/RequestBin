@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.unitron.requestbin</groupId>
 	<artifactId>request-bin</artifactId>
-	<version>1.0.0.DEV</version>
+	<version>1.0.0.BETA-1</version>
 	<name>Request bin</name>
 	<description>Request bin</description>
 
